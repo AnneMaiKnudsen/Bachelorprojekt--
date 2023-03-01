@@ -9,7 +9,7 @@ import re
 from ete3 import Tree
 
 # Hej Anne Mai
-
+#Hej Ane
 excluded_species = ["tupBel1", "mm10", "canFam3"]
 
 def write_phylip(seqs, output_file):
