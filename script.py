@@ -44,7 +44,7 @@ def write_fasta(seqs, output_file):
             print(f">{name}\n{seqs[name]}")
 
 # command line arguments
-_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv #hvor mange filer skal vi give som input (hvor mange tee files? 3 eller 1?), og er aln_stat_file input eller output
+_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv #hvor mange filer skal vi give som input (hvor mange tee files? 3 eller 1?), og er aln_stat_file input eller output, og skal vi selv skrive hvad output_dir er?
 
 # read id table
 id_table = pd.read_csv(id_table_file, sep="\t").drop_duplicates("name2") #hvad er name2? er det en kolonne?
@@ -103,14 +103,14 @@ with gzip.open(fasta_file, "rt") as f:
                         cds_alignment[species]="".join(exons[species]).upper()
                 
                 # # regular expression for selecting only those with an aligned start and stop codon no inframe stop codons:
-                reges = re.compile(r"ATG(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)$")
+                regex = re.compile(r"ATG(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)$")
                 
                 # # regular expression for truncating at inframe stop codons:
-                regex = re.compile(r"(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)")
+                # regex = re.compile(r"(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)")
 
                 # use the regular expression on each sequence 
                 for species in list(cds_alignment.keys()):
-                    match = regex.match(cds_alignment[species]) #skal det være reges? 
+                    match = regex.match(cds_alignment[species]) 
 
                     if match:
                         # remove the stop codon found
