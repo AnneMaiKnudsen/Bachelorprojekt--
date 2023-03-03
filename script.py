@@ -8,9 +8,7 @@ from Bio import SeqIO
 import re 
 from ete3 import Tree
 
-# Hej Anne Mai
-# Hej Ane
-####
+
 
 excluded_species = ["tupBel1", "mm10", "canFam3"]
 
