@@ -10,7 +10,7 @@ from ete3 import Tree
 
 
 
-excluded_species = ["tupBel1", "mm10", "canFam3"]
+excluded_species = ["tupBel1", "mm10", "canFam3"] #hvorfor er disse eksluderet
 
 def write_phylip(seqs, output_file):
     if not os.path.exists(os.path.dirname(output_file)):
@@ -44,11 +44,11 @@ def write_fasta(seqs, output_file):
             print(f">{name}\n{seqs[name]}")
 
 # command line arguments
-_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv
+_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv #hvor mange filer skal vi give som input, og er aln_stat_file input eller output
 
 # read id table
-id_table = pd.read_csv(id_table_file, sep="\t").drop_duplicates("name2")
-id_table["ucsc_gene_base"] = [x.rsplit(".", 1)[0] for x in id_table["name2"]]
+id_table = pd.read_csv(id_table_file, sep="\t").drop_duplicates("name2") #hvad er name2? er det en kolonne?
+id_table["ucsc_gene_base"] = [x.rsplit(".", 1)[0] for x in id_table["name2"]] #er "ucsc_gene_base" et index?
 id_table.set_index("ucsc_gene_base", inplace=True)
 
 if not os.path.exists(output_dir):
