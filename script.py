@@ -44,7 +44,7 @@ def write_fasta(seqs, output_file):
             print(f">{name}\n{seqs[name]}")
 
 # command line arguments
-_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv #hvor mange filer skal vi give som input (hvor mange tee files? 3 eller 1?), og er aln_stat_file input eller output, og skal vi selv skrive hvad output_dir er?
+_, fasta_file, id_table_file, tree_file, aln_stat_file, output_dir=sys.argv #hvor mange filer skal vi give som input (hvor mange tee files? 3 eller 1? - scientefic names), og er aln_stat_file input eller output, og skal vi selv skrive hvad output_dir er?
 
 # read id table
 id_table = pd.read_csv(id_table_file, sep="\t").drop_duplicates("name2") #hvad er name2? er det en kolonne?
