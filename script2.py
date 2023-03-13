@@ -8,7 +8,7 @@ from Bio import SeqIO
 import re 
 from ete3 import Tree
 
-excluded_species =  ['tupChi1', 'speTri2', 'jacJac1', 'micOch1', 'criGri1', 'mesAur1', 'rn6', 'hetGla2', 'cavPor3', 'chiLan1', 'octDeg1', 'oryCun2', 'ochPri3', 'susScr3', 'vicPac2', 'camFer1', 'turTru2', 'orcOrc1', 'panHod1', 'bosTau8', 'oviAri3', 'capHir1', 'felCat8', 'musFur1', 'ailMel1', 'odoRosDiv1', 'lepWed1', 'pteAle1', 'pteVam1', 'eptFus1', 'myoDav1', 'myoLuc2', 'conCri1', 'loxAfr3', 'eleEdw1', 'triMan1', 'chrAsi1', 'echTel2', 'oryAfe1', 'dasNov3', 'monDom5', 'sarHar1', 'ornAna1', 'colLiv1', 'falChe1', 'falPer1', 'ficAlb2', 'zonAlb1', 'geoFor1', 'pseHum1', 'melUnd1', 'amaVit1', 'araMac1', 'anaPla1', 'galGal4', 'melGal1', 'allMis1', 'cheMyd1', 'chrPic2', 'anoCar2', 'tetNig2', 'gasAcu1', 'gadMor1', 'lepOcu1'] #["tupBel1", "mm10", "canFam3"] #hvorfor er disse eksluderet
+excluded_species =  ['tupChi1', 'speTri2', 'jacJac1', 'micOch1', 'criGri1', 'mesAur1', 'rn6', 'hetGla2', 'cavPor3', 'chiLan1', 'octDeg1', 'oryCun2', 'ochPri3', 'susScr3', 'vicPac2', 'camFer1', 'turTru2', 'orcOrc1', 'panHod1', 'bosTau8', 'oviAri3', 'capHir1', 'felCat8', 'musFur1', 'ailMel1', 'odoRosDiv1', 'lepWed1', 'pteAle1', 'pteVam1', 'eptFus1', 'myoDav1', 'myoLuc2', 'conCri1', 'loxAfr3', 'eleEdw1', 'triMan1', 'chrAsi1', 'echTel2', 'oryAfe1', 'dasNov3', 'monDom5', 'sarHar1', 'ornAna1', 'colLiv1', 'falChe1', 'falPer1', 'ficAlb2', 'zonAlb1', 'geoFor1', 'pseHum1', 'melUnd1', 'amaVit1', 'araMac1', 'anaPla1', 'galGal4', 'melGal1', 'allMis1', 'cheMyd1', 'chrPic2', 'anoCar2', 'tetNig2', 'gasAcu1', 'gadMor1', 'lepOcu1', 'cerSim1', 'macEug2'] #["tupBel1", "mm10", "canFam3"] #hvorfor er disse eksluderet
 
 def write_phylip(seqs, output_file):
     if not os.path.exists(os.path.dirname(output_file)):
@@ -143,11 +143,11 @@ with gzip.open(fasta_file, "rt") as f:
                     output_path = os.path.join(output_dir, gene_name, gene_name + ".nw")
                     alignment_tree.write(format=1, outfile=output_path)
 
-                    # empty the exon dictionary
-                    exons = defaultdict(list)
-
                 else:
                     skipped += 1
+                
+                # empty the exon dictionary
+                exons = defaultdict(list)
 
         # add an exon sequence to the list for the species (assembly e.g. hg38)
         exons[assembly].append(str(entry.seq))                               
@@ -155,13 +155,67 @@ with gzip.open(fasta_file, "rt") as f:
         # make our current id the precious one
         prev_ucsc_id = ucsc_id
 
-    if is_coding and "hg38" in cds_alignment and len(cds_alignment) >=2:
-        # record which species are in the alignment
-        species_included[gene_name] = list(cds_alignment.keys())
 
-        # write phylip file
-        output_path = os.path.join(output_dir, gene_name, gene_name + ".phylip")
-        write_phylip(cds_alignment, output_path)
+    try:
+        # try to extract the ucsc gene name from the ucsc gene id
+        name, version = prev_ucsc_id.rsplit(".", 1) #har ændret fra ucsc_id til prev_ucsc_id
+        gene_name = id_table.loc[name, "geneName"]
+        chrom = id_table.loc[name, "#chrom"]
+        is_coding = id_table.loc[name, "transcriptClass"] == "coding" and "pseudo" not in id_table.loc[name, "transcriptType"]
+
+    except KeyError:
+        # if that is not possible, we skip the gene
+        skipped +=1
+            
+    else:
+        # if it was possible, we go on
+        print(gene_name)
+
+        #make a dictionary with the concatenated exons (CDS) for each gene
+        cds_alignment={}
+        for species in exons:
+            if species not in excluded_species:
+                cds_alignment[species]="".join(exons[species]).upper()
+                
+                # # regular expression for selecting only those with an aligned start and stop codon no inframe stop codons:
+                regex = re.compile(r"ATG(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)$")
+                
+                # # regular expression for truncating at inframe stop codons:
+                # regex = re.compile(r"(?:(?!TAA|TAG|TGA)...)*(?:TAA|TAG|TGA)")
+                
+                # use the regular expression on each sequence 
+        for species in list(cds_alignment.keys()):
+            match = regex.match(cds_alignment[species])
+
+            if match:
+                # remove the stop codon found
+                start, end = match.span()
+                cds_alignment[species] = cds_alignment[species][:end-3]+"?"*(len(cds_alignment[species])-end+3)
+            else:
+                # delete the species and their sequences if the regular expression does not match
+                del cds_alignment[species]
+                
+        # keep the alignments with human and at least two other species
+        if is_coding and "hg38" in cds_alignment and len(cds_alignment) >=2:
+            # record which species are in the alignment
+            species_included[gene_name] = list(cds_alignment.keys())
+
+            # write phylip file
+            output_path = os.path.join(output_dir, gene_name, gene_name + ".phylip")
+            write_phylip(cds_alignment, output_path)
+
+            # write fasta file (in case ypu need it)
+            output_path = os.path.join(output_dir, gene_name, gene_name + ".fa")
+            write_fasta(cds_alignment, output_path)
+
+            # remove the species from the tree that were removed from the alignment
+            alignment_tree = tree.copy("newick")
+            alignment_tree.prune(list(cds_alignment.keys())) #denne her linje fejler
+
+            #write the tree for the alignment
+            output_path = os.path.join(output_dir, gene_name, gene_name + ".nw")
+            alignment_tree.write(format=1, outfile=output_path)
+
 
                 
 print(f"Skipped {skipped} genes")
