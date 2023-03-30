@@ -10,6 +10,8 @@ from ete3 import Tree
 
 excluded_species =  ['tupChi1', 'speTri2', 'jacJac1', 'micOch1', 'criGri1', 'mesAur1', 'rn6', 'hetGla2', 'cavPor3', 'chiLan1', 'octDeg1', 'oryCun2', 'ochPri3', 'susScr3', 'vicPac2', 'camFer1', 'turTru2', 'orcOrc1', 'panHod1', 'bosTau8', 'oviAri3', 'capHir1', 'felCat8', 'musFur1', 'ailMel1', 'odoRosDiv1', 'lepWed1', 'pteAle1', 'pteVam1', 'eptFus1', 'myoDav1', 'myoLuc2', 'conCri1', 'loxAfr3', 'eleEdw1', 'triMan1', 'chrAsi1', 'echTel2', 'oryAfe1', 'dasNov3', 'monDom5', 'sarHar1', 'ornAna1', 'colLiv1', 'falChe1', 'falPer1', 'ficAlb2', 'zonAlb1', 'geoFor1', 'pseHum1', 'melUnd1', 'amaVit1', 'araMac1', 'anaPla1', 'galGal4', 'melGal1', 'allMis1', 'cheMyd1', 'chrPic2', 'anoCar2', 'tetNig2', 'gasAcu1', 'gadMor1', 'lepOcu1', 'cerSim1', 'macEug2', 'equCab2', 'eriEur2', 'sorAra2', 'oreNil2', 'oryLat2', 'taeGut2', 'latCha1', 'apaSpi1', 'pelSin1', 'fr3', 'neoBri1', 'hapBur1', 'mayZeb1', 'punNye1', 'danRer10', 'astMex1', 'xenTro7', 'xipMac1', 'takFla1', 'petMar2'] #["tupBel1", "mm10", "canFam3"] #hvorfor er disse eksluderet
 
+species_dictionary=defaultdict(list)
+
 def write_phylip(seqs, output_file):
     if not os.path.exists(os.path.dirname(output_file)):
         os.makedirs(os.path.dirname(output_file))
@@ -137,6 +139,9 @@ with gzip.open(fasta_file, "rt") as f:
                     output_path = os.path.join(output_dir, chrom, gene_name, gene_name + ".fa")
                     write_fasta(cds_alignment, output_path)
 
+                    # write species dict
+                    species_dictionary[chrom].append(gene_name)
+
                     # remove the species from the tree that were removed from the alignment
                     alignment_tree = tree.copy("newick")
                     alignment_tree.prune(list(cds_alignment.keys())) #denne her linje fejler
@@ -213,6 +218,9 @@ with gzip.open(fasta_file, "rt") as f:
             output_path = os.path.join(output_dir, chrom, gene_name, gene_name + ".fa")
             write_fasta(cds_alignment, output_path)
 
+            # write species dict
+            species_dictionary[chrom].append(gene_name)
+
             # remove the species from the tree that were removed from the alignment
             alignment_tree = tree.copy("newick")
             alignment_tree.prune(list(cds_alignment.keys())) #denne her linje fejler
@@ -224,6 +232,7 @@ with gzip.open(fasta_file, "rt") as f:
 
                 
 print(f"Skipped {skipped} genes")
+print(species_dictionary)
 
 records = []
 for gene, aligned_species in species_included.items():
